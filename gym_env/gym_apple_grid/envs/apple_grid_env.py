@@ -98,7 +98,7 @@ class AppleGridEnv(gym.Env):
         # Place apples
         apple_count = 0
         while apple_count < self.num_apples:
-            x, y = self._sample_random_location_biased()
+            x, y = self._sample_random_location()
             if not grid[x][y] == ENV_DATA['empty']:
                 continue
                 

@@ -15,7 +15,7 @@ ACTIONS = { 'left' : [-1, 0],
                 'shoot' : []
     }
 
-ACTION_ARR = ['left', 'right', 'up', 'down', 'noop', 'turn_counterclockwise', 'turn_clockwise', 'shoot']
+ACTION_ARR = ['up', 'noop', 'turn_counterclockwise', 'turn_clockwise', 'shoot']
 
 ORIENTATIONS = {'left': np.array([-1, 0]),
                 'right': np.array([1, 0]),
@@ -45,7 +45,7 @@ class Agent:
     
     @property
     def action_space(self):
-        return Discrete(8)
+        return Discrete(5)
 
     property
     def observation_space(self):
@@ -101,7 +101,7 @@ class Agent:
             return grid, 0.0
 
 
-        next_loc = self._move_by_delta(self.location,  ACTIONS[action])
+        next_loc = self._move_by_delta(self.location,  ORIENTATIONS[self.orientation])
         
         # Out of bounds
         if not self._is_in_map(next_loc, grid):

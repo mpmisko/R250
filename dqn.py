@@ -17,7 +17,7 @@ EPS_START = 0.95
 EPS_END = 0.05
 EPS_DECAY = 200
 TARGET_UPDATE = 10
-n_actions = 8
+n_actions = 5
 
 class ReplayMemory(object):
     def __init__(self, capacity):
@@ -41,11 +41,11 @@ class DQNModel(nn.Module):
     def __init__(self, h, w, outputs):
         super(DQNModel, self).__init__()
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1)
-        #self.bn1 = nn.BatchNorm2d(16)
+        self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1)
-        #self.bn2 = nn.BatchNorm2d(32)
+        self.bn2 = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(32, 32, kernel_size=3, stride=1)
-        #self.bn3 = nn.BatchNorm2d(32)
+        self.bn3 = nn.BatchNorm2d(32)
 
         # Number of Linear input connections depends on output of conv2d layers
         # and therefore the input image size, so compute it.
@@ -60,9 +60,9 @@ class DQNModel(nn.Module):
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = F.leaky_relu(self.conv1(x))
-        x = F.leaky_relu(self.conv2(x))
-        x = F.leaky_relu(self.conv3(x))
+        x = F.leaky_relu(self.bn1(self.conv1(x)))
+        x = F.leaky_relu(self.bn2(self.conv2(x)))
+        x = F.leaky_relu(self.bn3(self.conv3(x)))
         return F.leaky_relu(self.head(x.view(x.size(0), -1)))
 
 def select_action(state, policy):
@@ -129,14 +129,14 @@ def train(env, args, is_rendering):
     memory1 = ReplayMemory(10000)
     memory2 = ReplayMemory(10000)
 
-    policy1 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, 8)
-    policy2 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, 8)
+    policy1 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions)
+    policy2 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions)
     
-    target1 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, 8)
+    target1 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions)
     target1.load_state_dict(policy1.state_dict())
     target1.eval()
 
-    target2 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, 8)
+    target2 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions)
     target2.load_state_dict(policy2.state_dict())
     target2.eval()
 
