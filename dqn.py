@@ -11,12 +11,12 @@ from tqdm import tqdm
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 steps_done = 0
-BATCH_SIZE = 64
-GAMMA = 0.999
-EPS_START = 0.9
+BATCH_SIZE = 128
+GAMMA = 0.9
+EPS_START = 0.95
 EPS_END = 0.05
 EPS_DECAY = 200
-TARGET_UPDATE = 2
+TARGET_UPDATE = 10
 n_actions = 8
 
 class ReplayMemory(object):
@@ -126,8 +126,8 @@ def train(env, args, is_rendering):
     
     agent1_rewards = []
     agent2_rewards = []
-    memory1 = ReplayMemory(4000)
-    memory2 = ReplayMemory(4000)
+    memory1 = ReplayMemory(10000)
+    memory2 = ReplayMemory(10000)
 
     policy1 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, 8)
     policy2 = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, 8)
@@ -140,7 +140,7 @@ def train(env, args, is_rendering):
     target2.load_state_dict(policy2.state_dict())
     target2.eval()
 
-    optimizer1 = optim.RMSprop(policy1.parameters())
+    optimizer1 = optim.RMSprop(policy1.parameters(), lr=0.01)
     optimizer2 = optim.RMSprop(policy2.parameters())
 
     for i_episode in range(args.num_episodes):
@@ -163,7 +163,7 @@ def train(env, args, is_rendering):
             torch_state2 = next_torch_state2
             action1 = select_action(torch_state1, policy1)
             action2 = select_action(torch_state2, policy2)
-            if is_rendering and i_episode > int(args.num_episodes * 0.9):
+            if is_rendering or i_episode > int(args.num_episodes * 0.95):
                 env.render()
 
             next_state, rewards, dones, _ = env.step([action1.item(), action2.item()])

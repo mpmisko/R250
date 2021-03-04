@@ -32,17 +32,23 @@ class AppleGridEnv(gym.Env):
                 num_actors, 
                 obs_window_size,
                 episode_steps,
-                is_rendering=True):
+                is_rendering=True,
+                random_actor_init=False):
 
         self.dimensions = dimensions
         self.num_apples = num_apples
         self.num_actors = num_actors
         self.episode_steps = episode_steps
         self.obs_window_size = obs_window_size
+        self.random_actor_init = random_actor_init
         self.is_rendering = is_rendering
-        self.grid, self.agents =  self._init_map()
         self.curr_step = 0
+        self.apple_respawn_delay = 7
+        self.apple_respawns = []
         self.apples_eaten = 0
+        self.actor1_start = np.array([0, 0], dtype=np.int32)
+        self.actor2_start = np.array([dimensions[0]-1, dimensions[1]-1], dtype=np.int32)
+        self.grid, self.agents =  self._init_map()
 
     @property
     def action_space(self):
@@ -59,35 +65,64 @@ class AppleGridEnv(gym.Env):
         y = np.random.randint(low=0, high=self.dimensions[1])
         return x, y
 
+    def _sample_random_location_biased(self):
+        x = np.random.randint(low=self.dimensions[0] // 4, high=self.dimensions[0] // 4 * 3)
+        y = np.random.randint(low=self.dimensions[1] // 4, high=self.dimensions[1] // 4 * 3)
+        return x, y
+
     def _init_map(self):
         grid = np.zeros(self.dimensions, dtype=np.int32)
         
+        # Place and initialise actors
+        actor_states = {}
+        actor_count = 0
+
+        if self.random_actor_init:
+            while actor_count < self.num_actors:
+                x, y = self._sample_random_location()
+                if not grid[x][y] == ENV_DATA['empty']:
+                    continue
+                
+                actor_states[actor_count] = Agent(actor_count, np.array([x, y]), 'up', self.obs_window_size)
+                grid[x][y] = ENV_DATA[str(actor_count)]
+                actor_count += 1
+        else:
+            actor_count = 2
+            x, y = self.actor1_start
+            actor_states[0] = Agent(0, self.actor1_start, 'up', self.obs_window_size)
+            grid[x][y] = ENV_DATA['0']
+            x, y = self.actor2_start
+            actor_states[1] = Agent(1, self.actor2_start, 'up', self.obs_window_size)
+            grid[x][y] = ENV_DATA['1']
+
         # Place apples
         apple_count = 0
         while apple_count < self.num_apples:
-            x, y = self._sample_random_location()
+            x, y = self._sample_random_location_biased()
             if not grid[x][y] == ENV_DATA['empty']:
                 continue
                 
             grid[x][y] = ENV_DATA['apple']
             apple_count += 1
 
-        # Place and initialise actors
-        actor_states = {}
-        actor_count = 0
-        while actor_count < self.num_actors:
-            x, y = self._sample_random_location()
-            if not grid[x][y] == ENV_DATA['empty']:
-                continue
-            
-            actor_states[actor_count] = Agent(actor_count, np.array([x, y]), 'up', self.obs_window_size)
-            grid[x][y] = ENV_DATA[str(actor_count)]
-            actor_count += 1
-
         return grid, actor_states
 
     def step(self, actions):
         assert len(actions) == self.num_actors
+
+        respawned = []
+        for i, (location, time) in enumerate(self.apple_respawns):
+            if time > self.curr_step:
+                continue
+
+            if not self.grid[location[0]][location[1]] == ENV_DATA['empty']:
+                continue
+                
+            self.grid[location[0]][location[1]] = ENV_DATA['apple']
+            respawned.append(i)
+        
+        for i in range(len(respawned)):
+            del self.apple_respawns[respawned[i] - i]
 
         indexed_actions = [(i, actions[i]) for i in range(len(actions))]
         random.shuffle(indexed_actions)
@@ -102,7 +137,10 @@ class AppleGridEnv(gym.Env):
             action = agent.get_action(action)
             self.grid, reward = agent.apply_action(action, self.grid, self.agents, self.curr_step)
             rewards[i] = reward
-            self.apples_eaten += 1 if reward > 0 else 0
+
+            if reward > 0:
+                self.apple_respawns.append((agent.location, self.apple_respawn_delay + self.curr_step))
+                self.apples_eaten += 1
 
         for idx, agent in self.agents.items():
             observations[idx] = agent.grid_to_observation(self.grid, RENDER_DATA)

@@ -1,6 +1,7 @@
 import numpy as np
 from gym.spaces import Box
 from gym.spaces import Discrete
+import matplotlib.pyplot as plt
 
 ACTIONS = { 'left' : [-1, 0],
                 'right' : [1, 0],
@@ -62,6 +63,9 @@ class Agent:
     def get_action(self, action):
         return ACTION_ARR[action]
 
+    def _move_by_delta(self, location, action):
+        return np.array([location[0] + action[1], location[1] + action[0]])
+
     def _is_in_map(self, location, grid):
         return 0 <= location[0] < grid.shape[0] and 0 <= location[1] < grid.shape[1]
 
@@ -75,14 +79,14 @@ class Agent:
             return grid, 0
 
         if action == "shoot":
-            loc = self.location + ORIENTATIONS[self.orientation]
+            loc = self._move_by_delta(self.location, ORIENTATIONS[self.orientation])
             while self._is_in_map(loc, grid):
                 content = grid[loc[0]][loc[1]]
                 if content != ENV_DATA['empty'] and content != ENV_DATA['apple']:
                     agents[AGENT_TO_IDX[content]].shot_time = curr_step
                     break
                 else:
-                    loc += ORIENTATIONS[self.orientation]
+                    loc = self._move_by_delta(loc, ORIENTATIONS[self.orientation])
 
             return grid, 0
         
@@ -94,10 +98,10 @@ class Agent:
                     self.orientation = or_name
                     break
 
-            return grid, 0
+            return grid, 0.0
 
 
-        next_loc = self.location + ACTIONS[action]
+        next_loc = self._move_by_delta(self.location,  ACTIONS[action])
         
         # Out of bounds
         if not self._is_in_map(next_loc, grid):
@@ -110,7 +114,7 @@ class Agent:
 
         # Can make step
         grid[self.location[0]][self.location[1]] = ENV_DATA['empty']
-        reward = 1 if content == ENV_DATA['apple'] else 0
+        reward = 10 if content == ENV_DATA['apple'] else 0
         grid[next_loc[0]][next_loc[1]] = ENV_DATA[str(self.index)]
         self.location = next_loc
         

@@ -9,9 +9,9 @@ parser.add_argument('--grid_size_x', type=int, default=12)
 parser.add_argument('--grid_size_y', type=int, default=12)
 parser.add_argument('--apple_count', type=int, default=20)
 parser.add_argument('--agent_count', type=int, default=2)
-parser.add_argument('--observation_size', type=int, default=10)
-parser.add_argument('--num_episodes', type=int, default=150)
-parser.add_argument('--exp_steps', type=int, default=1500)
+parser.add_argument('--observation_size', type=int, default=6)
+parser.add_argument('--num_episodes', type=int, default=250)
+parser.add_argument('--exp_steps', type=int, default=600)
 
 args = parser.parse_args()
 
@@ -23,4 +23,4 @@ env.init_env(dimensions=[args.grid_size_x, args.grid_size_y],
              episode_steps=args.exp_steps,
              obs_window_size=args.observation_size)
 
-train(env, args, is_rendering=True)
+train(env, args, is_rendering=False)
