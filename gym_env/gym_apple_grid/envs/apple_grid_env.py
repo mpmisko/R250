@@ -108,6 +108,10 @@ class AppleGridEnv(gym.Env):
         return grid, actor_states
 
     def step(self, actions):
+        
+        if type(actions) == int:
+            actions = [actions, 0]
+
         assert len(actions) == self.num_actors
 
         respawned = []
@@ -155,6 +159,12 @@ class AppleGridEnv(gym.Env):
         self.grid, self.agents =  self._init_map()
         self.curr_step = 0
         self.apples_eaten = 0
+        self.apple_respawns = []
+        observations = [None] * 2
+        for idx, agent in self.agents.items():
+            observations[idx] = agent.grid_to_observation(self.grid, RENDER_DATA)
+
+        return observations[0]
 
     def _map_to_colors(self):
         img = np.zeros([*self.grid.shape, 3])

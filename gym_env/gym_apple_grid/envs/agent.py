@@ -47,10 +47,10 @@ class Agent:
     def action_space(self):
         return Discrete(5)
 
-    property
+    @property
     def observation_space(self):
-        return Box(low=0.0, high=0.0, shape=(self.obs_window_size + 1,
-                                             self.obs_window_size + 1, 3), dtype=np.float32)
+        return Box(low=0.0, high=0.0, shape=(3, self.obs_window_size + 1,
+                                             self.obs_window_size + 1), dtype=np.float32)
 
     def logit_to_action(self, logits):
         idx = np.argmax(logits)
