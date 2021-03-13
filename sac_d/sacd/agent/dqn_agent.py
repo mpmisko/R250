@@ -58,7 +58,7 @@ class DQNModel(nn.Module):
         return F.leaky_relu(self.head(x.view(x.size(0), -1)))
 
 class DQNAgent:
-    def __init__(self, env, test_env, 
+    def __init__(self, env, test_env, cuda, 
                 target_update_interval=10, update_interval=1, start_steps=5000, 
                 batch_size=128, gamma=0.9, eps_start=0.95, eps_end=0.05, 
                 eps_decay=200, n_actions=5, memory_size=10000):
@@ -69,9 +69,10 @@ class DQNAgent:
         self.eps_end = eps_end
         self.eps_decay = eps_decay
         self.n_actions = n_actions
+        self.device = 'cpu' if not cuda else 'cuda'
         self.memory = ReplayMemory(memory_size)
-        self.policy = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions)
-        self.target = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions)
+        self.policy = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions).to(self.device)
+        self.target = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions).to(self.device)
         self.target.load_state_dict(self.policy.state_dict())
         self.target.eval()
         self.optimizer = optim.RMSprop(self.policy.parameters(), lr=0.01)
@@ -113,9 +114,9 @@ class DQNAgent:
 
         non_final_next_states = torch.stack([s for s in batch.next_state
                                                     if s is not None])
-        state_batch = torch.stack(batch.state)
-        action_batch = torch.stack(batch.action).squeeze(-1)
-        reward_batch = torch.tensor(batch.reward)
+        state_batch = torch.stack(batch.state).to(self.device)
+        action_batch = torch.stack(batch.action).squeeze(-1).to(self.device)
+        reward_batch = torch.tensor(batch.reward).to(self.device)
         state_action_values = self.policy(state_batch.float()).gather(1, action_batch).squeeze()
         next_state_values = torch.zeros(self.batch_size)
         next_state_values[non_final_mask] = self.target(non_final_next_states.float()).max(1)[0].detach()

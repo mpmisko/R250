@@ -125,10 +125,10 @@ def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
 
         print(dqn_config)
         agent1 = DQNAgent(
-            env=env, test_env=test_env, **dqn_config)
+            env=env, test_env=test_env, cuda=args.cuda, **dqn_config)
 
         agent2 = DQNAgent(
-            env=env, test_env=test_env, **dqn_config)
+            env=env, test_env=test_env, cuda=args.cuda, **dqn_config)
 
     elif args.mode=='mixed':
         agent1 = SacdAgent(
@@ -136,7 +136,7 @@ def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
             seed=args.seed, **sacd_config)
 
         agent2 = DQNAgent(
-            env=env, test_env=test_env, **dqn_config)
+            env=env, test_env=test_env, cuda=args.cuda, **dqn_config)
     else:
         raise RuntimeError
 
