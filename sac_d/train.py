@@ -152,7 +152,6 @@ def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ab
         'memory_size' : [200, 2000, 20000],
         'target_entropy_ratio' : [0.9, 0.95, 0.99],
         'use_per' : [True, False],
-        'target_update_interval' : [40, 400, 4000]
     }
     
     # Create logging file
@@ -163,29 +162,27 @@ def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ab
     for memory_size in hyperparams['memory_size']:
         for ratio in hyperparams['target_entropy_ratio']:
             for per in hyperparams['use_per']:
-                for update_interval in hyperparams['target_update_interval']:
                     params = {
                         'memory_size' : memory_size,
                         'target_entropy_ratio' : ratio,
                         'use_per' : per,
-                        'target_update_interval' : update_interval
                     }
 
                     agent1, agent2 = get_agents(env, env, log_dir, sacd_config, sacd_config, params)
-                    print(f"Starting traning hyperparam config: [memory] -- {memory_size}, [target_entropy_ratio] -- {ratio}, [use_per] -- {int(per)}, [target_update_interval] -- {update_interval}")
+                    print(f"Starting traning hyperparam config: [memory] -- {memory_size}, [target_entropy_ratio] -- {ratio}, [use_per] -- {int(per)}")
                     run_train(env, agent1, agent2, num_episodes)
 
 
                     # Log agent 1
                     with open(path, 'a') as f: 
                         for episode, val in enumerate(agent1.train_returns):
-                            data = f"{memory_size},{ratio},{int(per)},{update_interval},{episode+1},{1},{val}\n"
+                            data = f"{memory_size},{ratio},{int(per)},{episode+1},{1},{val}\n"
                             f.write(data)
 
                     # Log agent 2
                     with open(path, 'a') as f: 
                         for episode, val in enumerate(agent2.train_returns):
-                            data = f"{memory_size},{ratio},{int(per)},{update_interval},{episode+1},{2},{val}\n"
+                            data = f"{memory_size},{ratio},{int(per)},{episode+1},{2},{val}\n"
                             f.write(data)
 
 
@@ -194,9 +191,8 @@ def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ab
 def run_dqn_hyperparam_eval(env, num_episodes, dqn_config, log_dir, path='./ablation_logs.csv'):
     hyperparams = {
         'memory_size' : [200, 2000, 20000],
-        'gamma' : [0.9, 0.95, 0.99],
+        'gamma' : [0.9, 0.99],
         'eps_decay' : [10, 100, 1000],
-        'target_update_interval' : [40, 400, 4000]
     }
     
     # Create logging file
@@ -207,29 +203,27 @@ def run_dqn_hyperparam_eval(env, num_episodes, dqn_config, log_dir, path='./abla
     for memory_size in hyperparams['memory_size']:
         for gamma in hyperparams['gamma']:
             for decay in hyperparams['eps_decay']:
-                for update_interval in hyperparams['target_update_interval']:
                     params = {
                         'memory_size' : memory_size,
                         'gamma' : gamma,
                         'eps_decay' : decay,
-                        'target_update_interval' : update_interval
                     }
 
                     agent1, agent2 = get_agents(env, env, log_dir, dqn_config, dqn_config, params)
-                    print(f"Starting traning hyperparam config: [memory] -- {memory_size}, [gamma] -- {gamma}, [decay] -- {decay}, [target_update_interval] -- {update_interval}")
+                    print(f"Starting traning hyperparam config: [memory] -- {memory_size}, [gamma] -- {gamma}, [decay] -- {decay}")
                     run_train(env, agent1, agent2, num_episodes)
 
 
                     # Log agent 1
                     with open(path, 'a') as f: 
                         for episode, val in enumerate(agent1.train_returns):
-                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                            data = f"{memory_size},{gamma},{decay},{episode+1},{1},{val}\n"
                             f.write(data)
 
                     # Log agent 2
                     with open(path, 'a') as f: 
                         for episode, val in enumerate(agent2.train_returns):
-                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{2},{val}\n"
+                            data = f"{memory_size},{gamma},{decay},{episode+1},{2},{val}\n"
                             f.write(data)
 
 
