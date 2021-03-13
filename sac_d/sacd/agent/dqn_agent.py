@@ -61,14 +61,13 @@ class DQNAgent:
     def __init__(self, env, test_env, 
                 target_update_interval=10, update_interval=1, start_steps=5000, 
                 batch_size=128, gamma=0.9, eps_start=0.95, eps_end=0.05, 
-                eps_decay=200, target_update=10, n_actions=5, memory_size=10000):
+                eps_decay=200, n_actions=5, memory_size=10000):
         self.steps = 0
         self.batch_size = batch_size
         self.gamma = gamma
         self.eps_start = eps_start
         self.eps_end = eps_end
         self.eps_decay = eps_decay
-        self.target_update = target_update
         self.n_actions = n_actions
         self.memory = ReplayMemory(memory_size)
         self.policy = DQNModel(env.obs_window_size + 1, env.obs_window_size + 1, n_actions)

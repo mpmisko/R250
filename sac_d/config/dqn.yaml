@@ -6,6 +6,5 @@ gamma: 0.9
 eps_start: 0.95
 eps_end: 0.05
 eps_decay: 200
-target_update: 10
 n_actions: 5
 memory_size: 10000

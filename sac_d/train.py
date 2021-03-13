@@ -63,17 +63,23 @@ def train_episode(env, agent1, agent2, episode_cnt):
     while not all(dones):
         action1 = agent1.select_action(states[0])
         action2 = agent2.select_action(states[1])
-
-        next_states, rewards, dones, _ = env.step([action1, action2])
         
-        agent1.memory.append(dones[0], states[0], action1, next_states[0], max(min(rewards[0], 1.0), -1.0)) # Fix this for DQN (expects none)
-        agent2.memory.append(dones[1], states[1], action2, next_states[1], max(min(rewards[1], 1.0), -1.0))
+        a0 = action1.item() if type(agent1) == DQNAgent else action1
+        a1 = action2.item() if type(agent2) == DQNAgent else action2
+
+        next_states, rewards, dones, _ = env.step([a0, a1])
+        
+        n0 = None if type(agent1) == DQNAgent and dones[0] else next_states[0]
+        n1 = None if type(agent2) == DQNAgent and dones[0] else next_states[0]
+
+        agent1.memory.append(dones[0], states[0], action1, n0, max(min(rewards[0], 1.0), -1.0)) # Fix this for DQN (expects none)
+        agent2.memory.append(dones[1], states[1], action2, n1, max(min(rewards[1], 1.0), -1.0))
 
         agent1.steps += 1
         agent2.steps += 1
         episode_steps += 1
-        episode_return1 += rewards[0]
-        episode_return2 += rewards[1]
+        episode_return1 += rewards[0] / 10
+        episode_return2 += rewards[1] / 10
 
         states = next_states
 
@@ -98,12 +104,134 @@ def train_episode(env, agent1, agent2, episode_cnt):
             f'Return1: {episode_return1:<5.1f}  '
             f'Return2: {episode_return2:<5.1f}  ')
 
+    return agent1.train_return, agent2.train_return
+
+def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
+    if args.mode=='sacd':
+        if hyperparams:
+            sacd_config.update(hyperparams)
+
+        agent1 = SacdAgent(
+            env=env, test_env=test_env, log_dir=log_dir, cuda=args.cuda,
+            seed=args.seed, **sacd_config)
+
+        agent2 = SacdAgent(
+            env=env, test_env=test_env, log_dir=log_dir, cuda=args.cuda,
+            seed=args.seed, **sacd_config)
+
+    elif args.mode=='dqn':
+        if hyperparams:
+            dqn_config.update(hyperparams) 
+
+        print(dqn_config)
+        agent1 = DQNAgent(
+            env=env, test_env=test_env, **dqn_config)
+
+        agent2 = DQNAgent(
+            env=env, test_env=test_env, **dqn_config)
+
+    elif args.mode=='mixed':
+        agent1 = SacdAgent(
+            env=env, test_env=test_env, log_dir=log_dir, cuda=args.cuda,
+            seed=args.seed, **sacd_config)
+
+        agent2 = DQNAgent(
+            env=env, test_env=test_env, **dqn_config)
+    else:
+        raise RuntimeError
+
+    return agent1, agent2
+
 def run_train(env, agent1, agent2, num_episodes=200):
     for i in range(num_episodes):
         train_episode(env, agent1, agent2, i)
 
-        if i % 12 == 0 and i > 0:
-            evaluate(env, agent1, agent2, rendering=i // 12 > 3)
+
+def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ablation_logs_sacd.csv'):
+    hyperparams = {
+        'memory_size' : [200, 2000, 20000],
+        'target_entropy_ratio' : [0.9, 0.95, 0.99],
+        'use_per' : [True, False],
+        'target_update_interval' : [40, 400, 4000]
+    }
+    
+    # Create logging file
+    with open(path, 'w+') as f: 
+        header = ''.join([f"{k}," for k in hyperparams]) + 'episode,' + 'agent_id,' + 'reward\n'
+        f.write(header)
+
+    for memory_size in hyperparams['memory_size']:
+        for ratio in hyperparams['target_entropy_ratio']:
+            for per in hyperparams['use_per']:
+                for update_interval in hyperparams['target_update_interval']:
+                    params = {
+                        'memory_size' : memory_size,
+                        'target_entropy_ratio' : ratio,
+                        'use_per' : per,
+                        'target_update_interval' : update_interval
+                    }
+
+                    agent1, agent2 = get_agents(env, env, log_dir, sacd_config, sacd_config, params)
+                    print(f"Starting traning hyperparam config: [memory] -- {memory_size}, [target_entropy_ratio] -- {ratio}, [use_per] -- {int(per)}, [target_update_interval] -- {update_interval}")
+                    run_train(env, agent1, agent2, num_episodes)
+
+
+                    # Log agent 1
+                    with open(path, 'a') as f: 
+                        for episode, val in enumerate(agent1.train_return):
+                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                            f.write(data)
+
+                    # Log agent 2
+                    with open(path, 'a') as f: 
+                        for episode, val in enumerate(agent2.train_return):
+                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                            f.write(data)
+
+
+
+
+def run_dqn_hyperparam_eval(env, num_episodes, dqn_config, log_dir, path='./ablation_logs.csv'):
+    hyperparams = {
+        'memory_size' : [200, 2000, 20000],
+        'gamma' : [0.9, 0.95, 0.99],
+        'eps_decay' : [10, 100, 1000],
+        'target_update_interval' : [40, 400, 4000]
+    }
+    
+    # Create logging file
+    with open(path, 'w+') as f: 
+        header = ''.join([f"{k}," for k in hyperparams]) + 'episode,' + 'agent_id,' + 'reward\n'
+        f.write(header)
+
+    for memory_size in hyperparams['memory_size']:
+        for gamma in hyperparams['gamma']:
+            for decay in hyperparams['eps_decay']:
+                for update_interval in hyperparams['target_update_interval']:
+                    params = {
+                        'memory_size' : memory_size,
+                        'gamma' : gamma,
+                        'eps_decay' : decay,
+                        'target_update_interval' : update_interval
+                    }
+
+                    agent1, agent2 = get_agents(env, env, log_dir, dqn_config, dqn_config, params)
+                    print(f"Starting traning hyperparam config: [memory] -- {memory_size}, [gamma] -- {gamma}, [decay] -- {decay}, [target_update_interval] -- {update_interval}")
+                    run_train(env, agent1, agent2, num_episodes)
+
+
+                    # Log agent 1
+                    with open(path, 'a') as f: 
+                        for episode, val in enumerate(agent1.train_return):
+                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                            f.write(data)
+
+                    # Log agent 2
+                    with open(path, 'a') as f: 
+                        for episode, val in enumerate(agent2.train_return):
+                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                            f.write(data)
+
 
 def run(args):
     with open(args.sacd_config) as f:
@@ -124,34 +252,10 @@ def run(args):
     log_dir = os.path.join(
         'logs', args.env_id, f'{name}-seed{args.seed}-{time}')
 
-    if args.mode=='sacd':
-        agent1 = SacdAgent(
-            env=env, test_env=test_env, log_dir=log_dir, cuda=args.cuda,
-            seed=args.seed, **sacd_config)
-
-        agent2 = SacdAgent(
-            env=env, test_env=test_env, log_dir=log_dir, cuda=args.cuda,
-            seed=args.seed, **sacd_config)
-
-    elif args.mode=='dqn':
-        agent1 = DQNAgent(
-            env=env, test_env=test_env, **dqn_confing)
-
-        agent2 = DQNAgent(
-            env=env, test_env=test_env, **dqn_confing)
-
-    elif args.mode=='mixed':
-        agent1 = SacdAgent(
-            env=env, test_env=test_env, log_dir=log_dir, cuda=args.cuda,
-            seed=args.seed, **sacd_config)
-
-        agent2 = DQNAgent(
-            env=env, test_env=test_env, **dqn_confing)
+    if args.mode == 'dqn':
+        run_dqn_hyperparam_eval(env, args.num_episodes, dqn_confing, log_dir)
     else:
-        raise RuntimeError
-
-    run_train(env, agent1, agent2)
-
+        run_sacd_hyperparam_eval(env, args.num_episodes, sacd_config, log_dir)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -166,10 +270,10 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--grid_size_x', type=int, default=12)
     parser.add_argument('--grid_size_y', type=int, default=12)
-    parser.add_argument('--apple_count', type=int, default=20)
+    parser.add_argument('--apple_count', type=int, default=12)
     parser.add_argument('--agent_count', type=int, default=2)
-    parser.add_argument('--observation_size', type=int, default=10)
-    parser.add_argument('--num_episodes', type=int, default=250)
+    parser.add_argument('--observation_size', type=int, default=12)
+    parser.add_argument('--num_episodes', type=int, default=80)
     parser.add_argument('--exp_steps', type=int, default=500)
 
     args = parser.parse_args()
