@@ -70,7 +70,7 @@ def train_episode(env, agent1, agent2, episode_cnt):
         next_states, rewards, dones, _ = env.step([a0, a1])
         
         n0 = None if type(agent1) == DQNAgent and dones[0] else next_states[0]
-        n1 = None if type(agent2) == DQNAgent and dones[0] else next_states[0]
+        n1 = None if type(agent2) == DQNAgent and dones[1] else next_states[1]
 
         agent1.memory.append(dones[0], states[0], action1, n0, max(min(rewards[0], 1.0), -1.0)) # Fix this for DQN (expects none)
         agent2.memory.append(dones[1], states[1], action2, n1, max(min(rewards[1], 1.0), -1.0))
@@ -266,7 +266,7 @@ if __name__ == '__main__':
     parser.add_argument('--shared', action='store_true')
     parser.add_argument('--env_id', type=str, default='MsPacmanNoFrameskip-v4')
     parser.add_argument('--cuda', action='store_true')
-    parser.add_argument('--mode', type=str, default="dqn")
+    parser.add_argument('--mode', type=str, default="sacd")
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--grid_size_x', type=int, default=12)
     parser.add_argument('--grid_size_y', type=int, default=12)
