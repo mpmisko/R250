@@ -56,7 +56,7 @@ class BaseAgent(ABC):
 
         self.writer = SummaryWriter(log_dir=self.summary_dir)
         self.train_return = RunningMeanStats(log_interval)
-
+        self.train_returns = []
         self.steps = 0
         self.learning_steps = 0
         self.episodes = 0

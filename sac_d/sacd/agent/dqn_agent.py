@@ -78,7 +78,7 @@ class DQNAgent:
         self.update_interval = update_interval
         self.start_steps = start_steps
         self.target_update_interval = target_update_interval
-        self.train_return = []
+        self.train_returns = []
 
     def select_action(self, state):
         sample = random.random()

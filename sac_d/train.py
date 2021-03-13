@@ -96,15 +96,15 @@ def train_episode(env, agent1, agent2, episode_cnt):
             agent2.update_target()
 
     # We log running mean of training rewards.
-    agent1.train_return.append(episode_return1)
-    agent2.train_return.append(episode_return2)
+    agent1.train_returns.append(episode_return1)
+    agent2.train_returns.append(episode_return2)
 
     print(f'Episode: {episode_cnt:<4}  '
             f'Episode steps: {episode_steps:<4}  '
             f'Return1: {episode_return1:<5.1f}  '
             f'Return2: {episode_return2:<5.1f}  ')
 
-    return agent1.train_return, agent2.train_return
+    return agent1.train_returns, agent2.train_returns
 
 def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
     if args.mode=='sacd':
@@ -178,14 +178,14 @@ def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ab
 
                     # Log agent 1
                     with open(path, 'a') as f: 
-                        for episode, val in enumerate(agent1.train_return):
-                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                        for episode, val in enumerate(agent1.train_returns):
+                            data = f"{memory_size},{ratio},{int(per)},{update_interval},{episode+1},{1},{val}\n"
                             f.write(data)
 
                     # Log agent 2
                     with open(path, 'a') as f: 
-                        for episode, val in enumerate(agent2.train_return):
-                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                        for episode, val in enumerate(agent2.train_returns):
+                            data = f"{memory_size},{ratio},{int(per)},{update_interval},{episode+1},{2},{val}\n"
                             f.write(data)
 
 
@@ -222,14 +222,14 @@ def run_dqn_hyperparam_eval(env, num_episodes, dqn_config, log_dir, path='./abla
 
                     # Log agent 1
                     with open(path, 'a') as f: 
-                        for episode, val in enumerate(agent1.train_return):
+                        for episode, val in enumerate(agent1.train_returns):
                             data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
                             f.write(data)
 
                     # Log agent 2
                     with open(path, 'a') as f: 
-                        for episode, val in enumerate(agent2.train_return):
-                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{1},{val}\n"
+                        for episode, val in enumerate(agent2.train_returns):
+                            data = f"{memory_size},{gamma},{decay},{update_interval},{episode+1},{2},{val}\n"
                             f.write(data)
 
 
