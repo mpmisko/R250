@@ -29,7 +29,7 @@ class LazyPrioritizedMultiStepMemory(LazyMultiStepMemory):
     def _pa(self, p):
         return np.clip((p + self.eps) ** self.alpha, self.min_pa, self.max_pa)
 
-    def append(self, state, action, reward, next_state, done, p=None):
+    def append(self, done, state, action, next_state, reward, p=None):
         # Calculate priority.
         if p is None:
             pa = self.max_pa

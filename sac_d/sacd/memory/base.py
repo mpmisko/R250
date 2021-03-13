@@ -63,7 +63,7 @@ class LazyMemory(dict):
         self._n = 0
         self._p = 0
 
-    def append(self, state, action, reward, next_state, done,
+    def append(self, done, state, action, next_state, reward,
                episode_done=None):
         self._append(state, action, reward, next_state, done)
 
@@ -126,7 +126,7 @@ class LazyMultiStepMemory(LazyMemory):
         if self.multi_step != 1:
             self.buff = MultiStepBuff(maxlen=self.multi_step)
 
-    def append(self, state, action, reward, next_state, done):
+    def append(self, done, state, action, next_state, reward):
         if self.multi_step != 1:
             self.buff.append(state, action, reward)
 

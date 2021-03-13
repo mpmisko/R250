@@ -2,6 +2,7 @@ import numpy as np
 from gym.spaces import Box
 from gym.spaces import Discrete
 import matplotlib.pyplot as plt
+import torch
 
 ACTIONS = { 'left' : [-1, 0],
                 'right' : [1, 0],
@@ -25,6 +26,7 @@ ORIENTATIONS = {'left': np.array([-1, 0]),
 
 ENV_DATA = {'empty' : 0,
             'apple' : 1,
+            'shot' : 4,
             '0' : 2,
             '1' : 3
 }
@@ -76,19 +78,24 @@ class Agent:
             if curr_step - self.shot_time > self.defreeze_delta:
                 self.shot_time = -1
             
-            return grid, 0
+            return grid, 0, None
 
         if action == "shoot":
+            trajectory = []
             loc = self._move_by_delta(self.location, ORIENTATIONS[self.orientation])
             while self._is_in_map(loc, grid):
                 content = grid[loc[0]][loc[1]]
-                if content != ENV_DATA['empty'] and content != ENV_DATA['apple']:
+                if content == ENV_DATA['empty'] or content == ENV_DATA['shot']:
+                    grid[loc[0]][loc[1]] = ENV_DATA['shot']
+                    trajectory.append((loc[0], loc[1]))
+                    loc = self._move_by_delta(loc, ORIENTATIONS[self.orientation])
+                elif content == ENV_DATA['apple']:
+                    loc = self._move_by_delta(loc, ORIENTATIONS[self.orientation])
+                else:
                     agents[AGENT_TO_IDX[content]].shot_time = curr_step
                     break
-                else:
-                    loc = self._move_by_delta(loc, ORIENTATIONS[self.orientation])
 
-            return grid, 0
+            return grid, 0, trajectory
         
         if action.startswith('turn'):
             R = np.array(ACTIONS[action])
@@ -98,19 +105,19 @@ class Agent:
                     self.orientation = or_name
                     break
 
-            return grid, 0.0
+            return grid, 0.0, None
 
 
         next_loc = self._move_by_delta(self.location,  ORIENTATIONS[self.orientation])
         
         # Out of bounds
         if not self._is_in_map(next_loc, grid):
-            return grid, 0
+            return grid, 0, None
 
-        # Stepping on other player or noop
+        # Stepping on other player, a shot, or noop
         content = grid[next_loc[0]][next_loc[1]]
         if not (content == ENV_DATA['empty'] or content == ENV_DATA['apple']):
-            return grid, 0
+            return grid, 0, None
 
         # Can make step
         grid[self.location[0]][self.location[1]] = ENV_DATA['empty']
@@ -118,7 +125,7 @@ class Agent:
         grid[next_loc[0]][next_loc[1]] = ENV_DATA[str(self.index)]
         self.location = next_loc
         
-        return grid, reward
+        return grid, reward, None
 
     def grid_to_observation(self, grid, render_data):
         # Assumes window is a square withe even length sides
@@ -147,4 +154,4 @@ class Agent:
         elif self.orientation == 'left':
             obs = np.rot90(obs, k=3)
 
-        return obs
+        return torch.transpose(torch.tensor(obs.copy()), 0, -1).byte()

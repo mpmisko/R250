@@ -53,6 +53,12 @@ class SacdAgent(BaseAgent):
         self.alpha = self.log_alpha.exp()
         self.alpha_optim = Adam([self.log_alpha], lr=lr)
 
+    def select_action(self, state):
+        if self.start_steps > self.steps:
+            return self.env.action_space.sample()
+        else:
+            return self.explore(state)
+
     def explore(self, state):
         # Act with randomness.
         state = torch.ByteTensor(

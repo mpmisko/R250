@@ -8,11 +8,11 @@ from gym_env.gym_apple_grid.envs.agent import Agent
 import os
 import glob
 
-ENV_DATA = {
-    'empty' : 0,
-    'apple' : 1,
-    '0' : 2,
-    '1' : 3
+ENV_DATA = {'empty' : 0,
+            'apple' : 1,
+            'shot' : 4,
+            '0' : 2,
+            '1' : 3
 }
 
 RENDER_DATA = {
@@ -20,6 +20,7 @@ RENDER_DATA = {
     1 : np.array([0, 255, 0]), # Green
     2 : np.array([255, 0, 0]), # Red
     3 : np.array([0, 0, 255]), # Blue
+    4 : np.array([255, 255, 0]) # Yellow
 }
 
 
@@ -45,6 +46,7 @@ class AppleGridEnv(gym.Env):
         self.curr_step = 0
         self.apple_respawn_delay = 7
         self.apple_respawns = []
+        self.shots = set()
         self.apples_eaten = 0
         self.actor1_start = np.array([0, 0], dtype=np.int32)
         self.actor2_start = np.array([dimensions[0]-1, dimensions[1]-1], dtype=np.int32)
@@ -128,6 +130,14 @@ class AppleGridEnv(gym.Env):
         for i in range(len(respawned)):
             del self.apple_respawns[respawned[i] - i]
 
+        for x, y in self.shots:
+            if self.grid[x][y] != ENV_DATA['shot']: # Apple reappeared on shot position
+                continue
+            
+            assert self.grid[x][y] == ENV_DATA['shot']
+            self.grid[x][y] = ENV_DATA['empty']
+        self.shots = set()
+
         indexed_actions = [(i, actions[i]) for i in range(len(actions))]
         random.shuffle(indexed_actions)
 
@@ -139,12 +149,15 @@ class AppleGridEnv(gym.Env):
         for i, action in indexed_actions:
             agent = self.agents[i]
             action = agent.get_action(action)
-            self.grid, reward = agent.apply_action(action, self.grid, self.agents, self.curr_step)
+            self.grid, reward, shot_trajectory = agent.apply_action(action, self.grid, self.agents, self.curr_step)
             rewards[i] = reward
 
             if reward > 0:
                 self.apple_respawns.append((agent.location, self.apple_respawn_delay + self.curr_step))
                 self.apples_eaten += 1
+
+            if shot_trajectory:
+                self.shots.update(shot_trajectory)
 
         for idx, agent in self.agents.items():
             observations[idx] = agent.grid_to_observation(self.grid, RENDER_DATA)
@@ -160,11 +173,7 @@ class AppleGridEnv(gym.Env):
         self.curr_step = 0
         self.apples_eaten = 0
         self.apple_respawns = []
-        observations = [None] * 2
-        for idx, agent in self.agents.items():
-            observations[idx] = agent.grid_to_observation(self.grid, RENDER_DATA)
-
-        return observations[0]
+        return self.get_observations()
 
     def _map_to_colors(self):
         img = np.zeros([*self.grid.shape, 3])
