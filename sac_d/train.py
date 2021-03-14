@@ -147,12 +147,12 @@ def run_train(env, agent1, agent2, num_episodes=200):
         train_episode(env, agent1, agent2, i)
 
 
-def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ablation_logs_sacd.csv'):
+def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ablation_logs_sacd_extra.csv'):
     hyperparams = {
-        'memory_size' : [200, 2000, 20000],
-        'target_entropy_ratio' : [0.9, 0.95, 0.99],
+        'memory_size' : [20000],
+        'target_entropy_ratio' : [0.95, 0.99],
         'use_per' : [True, False],
-        'target_update_interval' : [40, 400, 4000]
+        'target_update_interval' : [400, 4000]
     }
     
     # Create logging file
