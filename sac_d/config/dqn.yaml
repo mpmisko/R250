@@ -2,9 +2,9 @@ target_update_interval: 4000
 update_interval: 2
 start_steps: 5000
 batch_size: 128
-gamma: 0.9
+gamma: 0.99
 eps_start: 0.95
 eps_end: 0.05
-eps_decay: 200
+eps_decay: 1000
 n_actions: 5
 memory_size: 10000

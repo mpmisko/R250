@@ -1,10 +1,10 @@
 num_steps: 300000
 batch_size: 64
 lr: 0.0003
-memory_size: 300000
+memory_size: 20000
 gamma: 0.99
 multi_step: 1
-target_entropy_ratio: 0.98
+target_entropy_ratio: 0.9
 start_steps: 5000
 update_interval: 2
 target_update_interval: 4000

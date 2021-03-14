@@ -229,6 +229,30 @@ def run_dqn_hyperparam_eval(env, num_episodes, dqn_config, log_dir, path='./abla
                             data = f"{memory_size},{gamma},{decay},{episode+1},{2},{val}\n"
                             f.write(data)
 
+def run_mixed_comparison(env, num_episodes, sacd_config, dqn_config, log_dir,  path='./ablation_logs_mixed.csv'):
+    
+    # Create logging file
+    with open(path, 'w+') as f: 
+        header = 'episode,' + 'agent_id,' + 'reward\n'
+        f.write(header)
+
+    for i in range(3):
+        agent1, agent2 = get_agents(env, env, log_dir, sacd_config, dqn_config, None)
+        print(f"Running new training: {i}")
+        run_train(env, agent1, agent2, num_episodes)
+
+
+        # Log agent 1
+        with open(path, 'a') as f: 
+            for episode, val in enumerate(agent1.train_returns):
+                data = f"{episode+1},{1},{val}\n"
+                f.write(data)
+
+        # Log agent 2
+        with open(path, 'a') as f: 
+            for episode, val in enumerate(agent2.train_returns):
+                data = f"{episode+1},{2},{val}\n"
+                f.write(data)
 
 def run(args):
     with open(args.sacd_config) as f:
@@ -251,8 +275,10 @@ def run(args):
 
     if args.mode == 'dqn':
         run_dqn_hyperparam_eval(env, args.num_episodes, dqn_confing, log_dir)
-    else:
+    elif args.mode == 'sacd':
         run_sacd_hyperparam_eval(env, args.num_episodes, sacd_config, log_dir)
+    else:
+        run_mixed_comparison(env, args.num_episodes, sacd_config, dqn_config, log_dir)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
