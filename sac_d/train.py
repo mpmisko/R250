@@ -276,9 +276,7 @@ def run_aggression_comparison(num_episodes, sacd_config, dqn_config, log_dir,  p
 
     for n_apples in hyperparams['num_apples']:
         for apple_delay in hyperparams['apple_respawn_delay']:
-            args.num_apples = n_apples
-            args.apple_respawn_delay = apple_delay
-            env = make_apple_env(args)
+            env = make_apple_env(args, n_apples, apple_delay)
 
             agent1, agent2 = get_agents(env, env, log_dir, sacd_config, dqn_config, None)
             run_train(env, agent1, agent2, num_episodes)
