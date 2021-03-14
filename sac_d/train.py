@@ -265,8 +265,8 @@ def run_mixed_comparison(env, num_episodes, sacd_config, dqn_config, log_dir,  p
 
 def run_aggression_comparison(num_episodes, sacd_config, dqn_config, log_dir,  path='./ablation_logs_mixed_biased.csv'):
     hyperparams = {
-        'num_apples' : [4, 12, 20],
-        'apple_respawn_delay' : [5, 15, 25]
+        'num_apples' : [4, 12, 20, 28],
+        'apple_respawn_delay' : [5, 15, 25, 35]
     }
 
     # Create logging file
@@ -277,19 +277,19 @@ def run_aggression_comparison(num_episodes, sacd_config, dqn_config, log_dir,  p
     for n_apples in hyperparams['num_apples']:
         for apple_delay in hyperparams['apple_respawn_delay']:
             env = make_apple_env(args, n_apples, apple_delay)
-
+            print(f"num apples: {n_apples}, delay {apple_delay}")
+            
             agent1, agent2 = get_agents(env, env, log_dir, sacd_config, dqn_config, None)
             run_train(env, agent1, agent2, num_episodes)
 
             # Log agent 1
-                    # Log agent 1
             with open(path, 'a') as f: 
-                data = f"{episode+1},{1},{agent1.shots}\n"
+                data = f"{n_apples},{apple_delay},{1},{agent1.shots}\n"
                 f.write(data)
 
             # Log agent 2
             with open(path, 'a') as f: 
-                data = f"{episode+1},{2},{agent2.shots}\n"
+                data = f"{n_apples},{apple_delay},{2},{agent2.shots}\n"
                 f.write(data)
 
 def run(args):
@@ -320,7 +320,7 @@ def run(args):
         run_mixed_comparison(env, args.num_episodes, sacd_config, dqn_config, log_dir)
     else:
     """
-    run_aggression_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_aggression.csv')
+    run_aggression_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_aggression_dqn.csv')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -339,7 +339,7 @@ if __name__ == '__main__':
     parser.add_argument('--apple_count', type=int, default=9)
     parser.add_argument('--agent_count', type=int, default=2)
     parser.add_argument('--observation_size', type=int, default=12)
-    parser.add_argument('--num_episodes', type=int, default=80)
+    parser.add_argument('--num_episodes', type=int, default=60)
     parser.add_argument('--exp_steps', type=int, default=500)
 
     args = parser.parse_args()
