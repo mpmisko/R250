@@ -74,7 +74,7 @@ class Agent:
     def apply_action(self, action, grid, agents, curr_step):
         # Returns updated grid, obtained rewards
 
-        if self.shot_time != -1 and self.shot_time != curr_step:
+        if self.shot_time != -1:
             if curr_step - self.shot_time > self.defreeze_delta:
                 self.shot_time = -1
             
