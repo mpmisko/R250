@@ -259,7 +259,7 @@ def run(args):
         sacd_config = yaml.load(f, Loader=yaml.SafeLoader)
     
     with open(args.dqn_config) as f:
-        dqn_confing = yaml.load(f, Loader=yaml.SafeLoader)
+        dqn_config = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Create environments.
     env = make_apple_env(args)
@@ -274,7 +274,7 @@ def run(args):
         'logs', args.env_id, f'{name}-seed{args.seed}-{time}')
 
     if args.mode == 'dqn':
-        run_dqn_hyperparam_eval(env, args.num_episodes, dqn_confing, log_dir)
+        run_dqn_hyperparam_eval(env, args.num_episodes, dqn_config, log_dir)
     elif args.mode == 'sacd':
         run_sacd_hyperparam_eval(env, args.num_episodes, sacd_config, log_dir)
     else:
