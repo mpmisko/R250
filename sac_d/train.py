@@ -145,9 +145,9 @@ def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
 
     return agent1, agent2
 
-def run_train(env, agent1, agent2, num_episodes=200):
+def run_train(env, agent1, agent2, num_episodes=200, rend=False):
     for i in range(num_episodes):
-        train_episode(env, agent1, agent2, i, rendering=(i == num_episodes-1))
+        train_episode(env, agent1, agent2, i, rendering=rend and (i == num_episodes-1))
 
 def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ablation_logs_sacd_extra.csv'):
     hyperparams = {
@@ -238,10 +238,10 @@ def run_mixed_comparison(env, num_episodes, sacd_config, dqn_config, log_dir,  p
         header = 'episode,' + 'agent_id,' + 'reward\n'
         f.write(header)
 
-    for i in range(3):
+    for i in range(2):
         agent1, agent2 = get_agents(env, env, log_dir, sacd_config, dqn_config, None)
         print(f"Running new training: {i}")
-        run_train(env, agent1, agent2, num_episodes)
+        run_train(env, agent1, agent2, num_episodes, rend=(i==1))
 
 
         # Log agent 1
