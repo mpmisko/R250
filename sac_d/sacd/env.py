@@ -314,7 +314,7 @@ def make_pytorch_env(env_id, episode_life=True, clip_rewards=True,
 def make_apple_env(args):
     env = AppleGridEnv()
     env.init_env(dimensions=[args.grid_size_x, args.grid_size_y],
-                num_apples=args.apple_count,
+                num_apples=args.num_apples,
                 num_actors=args.agent_count,
                 apple_respawn_delay=args.apple_respawn_delay,
                 episode_steps=args.exp_steps,
