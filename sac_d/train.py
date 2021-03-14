@@ -145,7 +145,9 @@ def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
 def run_train(env, agent1, agent2, num_episodes=200):
     for i in range(num_episodes):
         train_episode(env, agent1, agent2, i)
-
+        
+        if i == num_episodes - 1:
+           evaluate(env, agent1, agent2, rendering=True)
 
 def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ablation_logs_sacd_extra.csv'):
     hyperparams = {
@@ -229,7 +231,7 @@ def run_dqn_hyperparam_eval(env, num_episodes, dqn_config, log_dir, path='./abla
                             data = f"{memory_size},{gamma},{decay},{episode+1},{2},{val}\n"
                             f.write(data)
 
-def run_mixed_comparison(env, num_episodes, sacd_config, dqn_config, log_dir,  path='./ablation_logs_mixed.csv'):
+def run_mixed_comparison(env, num_episodes, sacd_config, dqn_config, log_dir,  path='./ablation_logs_mixed_biased.csv'):
     
     # Create logging file
     with open(path, 'w+') as f: 
