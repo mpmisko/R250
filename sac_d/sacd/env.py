@@ -316,6 +316,7 @@ def make_apple_env(args):
     env.init_env(dimensions=[args.grid_size_x, args.grid_size_y],
                 num_apples=args.apple_count,
                 num_actors=args.agent_count,
+                apple_respawn_delay=args.apple_respawn_delay,
                 episode_steps=args.exp_steps,
                 obs_window_size=args.observation_size)
 

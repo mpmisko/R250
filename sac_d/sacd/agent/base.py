@@ -63,6 +63,7 @@ class BaseAgent(ABC):
         self.best_eval_score = -np.inf
         self.num_steps = num_steps
         self.batch_size = batch_size
+        self.shots = 0
         self.rewards = []
         self.gamma_n = gamma ** multi_step
         self.start_steps = start_steps
