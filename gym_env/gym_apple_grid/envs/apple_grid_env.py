@@ -45,7 +45,7 @@ class AppleGridEnv(gym.Env):
         self.random_actor_init = random_actor_init
         self.is_rendering = is_rendering
         self.curr_step = 0
-        self.apple_respawn_delay = 15
+        self.apple_respawn_delay = apple_respawn_delay
         self.apple_respawns = []
         self.shots = set()
         self.apples_eaten = 0
