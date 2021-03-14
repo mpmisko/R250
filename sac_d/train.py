@@ -13,7 +13,7 @@ def evaluate(test_env, agent1, agent2, rendering=False):
     num_steps = 0
     total_return1 = 0.0
     total_return2 = 0.0
-    num_eval_steps = 1500
+    num_eval_steps = 500
 
     while num_steps <= num_eval_steps:
         states = test_env.reset()
