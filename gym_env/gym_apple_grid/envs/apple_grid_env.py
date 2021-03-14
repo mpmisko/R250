@@ -44,7 +44,7 @@ class AppleGridEnv(gym.Env):
         self.random_actor_init = random_actor_init
         self.is_rendering = is_rendering
         self.curr_step = 0
-        self.apple_respawn_delay = 7
+        self.apple_respawn_delay = 15
         self.apple_respawns = []
         self.shots = set()
         self.apples_eaten = 0
@@ -100,7 +100,7 @@ class AppleGridEnv(gym.Env):
         # Place apples
         apple_count = 0
         while apple_count < self.num_apples:
-            x, y = self._sample_random_location()
+            x, y = self._sample_random_location_biased()
             if not grid[x][y] == ENV_DATA['empty']:
                 continue
                 

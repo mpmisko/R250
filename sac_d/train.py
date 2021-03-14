@@ -293,7 +293,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--grid_size_x', type=int, default=12)
     parser.add_argument('--grid_size_y', type=int, default=12)
-    parser.add_argument('--apple_count', type=int, default=12)
+    parser.add_argument('--apple_count', type=int, default=9)
     parser.add_argument('--agent_count', type=int, default=2)
     parser.add_argument('--observation_size', type=int, default=12)
     parser.add_argument('--num_episodes', type=int, default=80)
