@@ -51,7 +51,7 @@ def evaluate(test_env, agent1, agent2, rendering=False):
     print('-' * 60)
 
 
-def train_episode(env, agent1, agent2, episode_cnt):
+def train_episode(env, agent1, agent2, episode_cnt, rendering=False):
     episode_return1 = 0.
     episode_return2 = 0.
 
@@ -61,6 +61,9 @@ def train_episode(env, agent1, agent2, episode_cnt):
     states = env.reset()
 
     while not all(dones):
+        if rendering:
+            env.render()
+
         action1 = agent1.select_action(states[0])
         action2 = agent2.select_action(states[1])
         
@@ -144,10 +147,7 @@ def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
 
 def run_train(env, agent1, agent2, num_episodes=200):
     for i in range(num_episodes):
-        train_episode(env, agent1, agent2, i)
-        
-        if i == num_episodes - 1:
-           evaluate(env, agent1, agent2, rendering=True)
+        train_episode(env, agent1, agent2, i, rendering=(i == num_episodes-1))
 
 def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ablation_logs_sacd_extra.csv'):
     hyperparams = {
