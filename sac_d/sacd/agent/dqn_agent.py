@@ -87,14 +87,14 @@ class DQNAgent:
             math.exp(-1. * self.steps / self.eps_decay)
         if sample > eps_threshold:
             with torch.no_grad():
-                return self.policy(state.unsqueeze(0).float()).max(1)[1].view(1, 1)
+                return self.policy(state.unsqueeze(0).float().to(self.device)).max(1)[1].view(1, 1)
         else:
             return torch.tensor([[random.randrange(self.n_actions)]], dtype=torch.long)
 
     def exploit(self, state):
         # Act without randomness.
         with torch.no_grad():
-            return self.policy(state.unsqueeze(0).float()).max(1)[1].view(1, 1)
+            return self.policy(state.unsqueeze(0).float().to(self.device)).max(1)[1].view(1, 1)
 
     def is_update(self):
         return self.steps % self.update_interval == 0\
@@ -113,12 +113,17 @@ class DQNAgent:
                                             batch.next_state)), dtype=torch.bool)
 
         non_final_next_states = torch.stack([s for s in batch.next_state
-                                                    if s is not None])
+                                                    if s is not None]).to(self.device)
         state_batch = torch.stack(batch.state).to(self.device)
-        action_batch = torch.stack(batch.action).squeeze(-1).to(self.device)
+        
+        actions = []
+        for i, a in enumerate(batch.action):
+            actions.append(a.to(self.device))
+
+        action_batch = torch.stack(actions).squeeze(-1).to(self.device)
         reward_batch = torch.tensor(batch.reward).to(self.device)
         state_action_values = self.policy(state_batch.float()).gather(1, action_batch).squeeze()
-        next_state_values = torch.zeros(self.batch_size)
+        next_state_values = torch.zeros(self.batch_size).to(self.device)
         next_state_values[non_final_mask] = self.target(non_final_next_states.float()).max(1)[0].detach()
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
 
