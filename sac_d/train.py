@@ -70,6 +70,9 @@ def train_episode(env, agent1, agent2, episode_cnt, rendering=False):
         a0 = action1.item() if type(agent1) == DQNAgent else action1
         a1 = action2.item() if type(agent2) == DQNAgent else action2
 
+        agent1.shots += int(a0 == 4)
+        agent2.shots += int(a1 == 4)
+
         next_states, rewards, dones, _ = env.step([a0, a1])
         
         n0 = None if type(agent1) == DQNAgent and dones[0] else next_states[0]
@@ -148,6 +151,10 @@ def get_agents(env, test_env, log_dir, sacd_config, dqn_config, hyperparams):
 def run_train(env, agent1, agent2, num_episodes=200, rend=False):
     for i in range(num_episodes):
         train_episode(env, agent1, agent2, i, rendering=rend and (i == num_episodes-1))
+
+    agent1.shots /= num_episodes
+    agent2.shots /= num_episodes
+
 
 def run_sacd_hyperparam_eval(env, num_episodes, sacd_config, log_dir, path='./ablation_logs_sacd_extra.csv'):
     hyperparams = {
@@ -256,6 +263,37 @@ def run_mixed_comparison(env, num_episodes, sacd_config, dqn_config, log_dir,  p
                 data = f"{episode+1},{2},{val}\n"
                 f.write(data)
 
+def run_aggression_comparison(num_episodes, sacd_config, dqn_config, log_dir,  path='./ablation_logs_mixed_biased.csv'):
+    hyperparams = {
+        'num_apples' : [4, 12, 20],
+        'apple_respawn_delay' : [5, 15, 25]
+    }
+
+    # Create logging file
+    with open(path, 'w+') as f: 
+        header = 'num_apples,' + 'apple_respawn_delay,' + 'agent_id,' 'shots'+'\n'
+        f.write(header)
+
+    for n_apples in hyperparams['num_apples']:
+        for apple_delay in hyperparams['apple_respawn_delay']:
+            args.num_apples = n_apples
+            args.apple_respawn_delay = apple_delay
+            env = make_apple_env(args)
+
+            agent1, agent2 = get_agents(env, env, log_dir, sacd_config, dqn_config, None)
+            run_train(env, agent1, agent2, num_episodes)
+
+            # Log agent 1
+                    # Log agent 1
+            with open(path, 'a') as f: 
+                data = f"{episode+1},{1},{agent1.shots}\n"
+                f.write(data)
+
+            # Log agent 2
+            with open(path, 'a') as f: 
+                data = f"{episode+1},{2},{agent2.shots}\n"
+                f.write(data)
+
 def run(args):
     with open(args.sacd_config) as f:
         sacd_config = yaml.load(f, Loader=yaml.SafeLoader)
@@ -275,12 +313,16 @@ def run(args):
     log_dir = os.path.join(
         'logs', args.env_id, f'{name}-seed{args.seed}-{time}')
 
+    """
     if args.mode == 'dqn':
         run_dqn_hyperparam_eval(env, args.num_episodes, dqn_config, log_dir)
     elif args.mode == 'sacd':
         run_sacd_hyperparam_eval(env, args.num_episodes, sacd_config, log_dir)
-    else:
+    elif args.mode == 'mixed':
         run_mixed_comparison(env, args.num_episodes, sacd_config, dqn_config, log_dir)
+    else:
+    """
+    run_aggression_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_aggression.csv')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -293,6 +335,7 @@ if __name__ == '__main__':
     parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--mode', type=str, default="sacd")
     parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--apple_respawn_delay', type=int, default=15)
     parser.add_argument('--grid_size_x', type=int, default=12)
     parser.add_argument('--grid_size_y', type=int, default=12)
     parser.add_argument('--apple_count', type=int, default=9)

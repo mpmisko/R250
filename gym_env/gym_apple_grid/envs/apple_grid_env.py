@@ -33,6 +33,7 @@ class AppleGridEnv(gym.Env):
                 num_actors, 
                 obs_window_size,
                 episode_steps,
+                apple_respawn_delay=15,
                 is_rendering=True,
                 random_actor_init=False):
 

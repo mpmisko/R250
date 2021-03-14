@@ -78,6 +78,7 @@ class DQNAgent:
         self.optimizer = optim.RMSprop(self.policy.parameters(), lr=0.01)
         self.update_interval = update_interval
         self.start_steps = start_steps
+        self.shots = 0
         self.target_update_interval = target_update_interval
         self.train_returns = []
 
