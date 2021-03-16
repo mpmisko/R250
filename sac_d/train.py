@@ -300,8 +300,6 @@ def run(args):
         dqn_config = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Create environments.
-    env = make_apple_env(args)
-    test_env = make_apple_env(args)
 
     # Specify the directory to log.
     name = args.sacd_config.split('/')[-1].rstrip('.yaml')
@@ -320,7 +318,7 @@ def run(args):
         run_mixed_comparison(env, args.num_episodes, sacd_config, dqn_config, log_dir)
     else:
     """
-    run_aggression_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_aggression_dqn.csv')
+    run_aggression_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_aggression_dqn_real.csv')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -339,7 +337,7 @@ if __name__ == '__main__':
     parser.add_argument('--apple_count', type=int, default=9)
     parser.add_argument('--agent_count', type=int, default=2)
     parser.add_argument('--observation_size', type=int, default=12)
-    parser.add_argument('--num_episodes', type=int, default=60)
+    parser.add_argument('--num_episodes', type=int, default=80)
     parser.add_argument('--exp_steps', type=int, default=500)
 
     args = parser.parse_args()
