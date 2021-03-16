@@ -33,6 +33,7 @@ class AppleGridEnv(gym.Env):
                 num_actors, 
                 obs_window_size,
                 episode_steps,
+                center_bias=4,
                 apple_respawn_delay=15,
                 is_rendering=True,
                 random_actor_init=False):
@@ -45,6 +46,7 @@ class AppleGridEnv(gym.Env):
         self.random_actor_init = random_actor_init
         self.is_rendering = is_rendering
         self.curr_step = 0
+        self.center_bias = center_bias
         self.apple_respawn_delay = apple_respawn_delay
         self.apple_respawns = []
         self.shots = set()
@@ -69,8 +71,8 @@ class AppleGridEnv(gym.Env):
         return x, y
 
     def _sample_random_location_biased(self):
-        x = np.random.randint(low=self.dimensions[0] // 4, high=self.dimensions[0] // 4 * 3)
-        y = np.random.randint(low=self.dimensions[1] // 4, high=self.dimensions[1] // 4 * 3)
+        x = np.random.randint(low=self.dimensions[0] // self.center_bias , high=self.dimensions[0] // self.center_bias * (1 - self.center_bias))
+        y = np.random.randint(low=self.dimensions[1] // self.center_bias , high=self.dimensions[1] // self.center_bias * (1 - self.center_bias))
         return x, y
 
     def _init_map(self):

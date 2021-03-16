@@ -311,11 +311,12 @@ def make_pytorch_env(env_id, episode_life=True, clip_rewards=True,
     return env
 
 
-def make_apple_env(args, n_apples, apple_delay):
+def make_apple_env(args, n_apples, apple_delay, bias):
     env = AppleGridEnv()
     env.init_env(dimensions=[args.grid_size_x, args.grid_size_y],
                 num_apples=n_apples,
                 num_actors=args.agent_count,
+                center_bias=bias,
                 apple_respawn_delay=apple_delay,
                 episode_steps=args.exp_steps,
                 obs_window_size=args.observation_size)

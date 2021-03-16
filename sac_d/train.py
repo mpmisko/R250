@@ -292,6 +292,36 @@ def run_aggression_comparison(num_episodes, sacd_config, dqn_config, log_dir,  p
                 data = f"{n_apples},{apple_delay},{2},{agent2.shots}\n"
                 f.write(data)
 
+def run_bias_comparison(num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_bias.csv'):
+    hyperparams = {
+        'bias' : [12, 6, 4, 3]
+    }
+
+    # Create logging file
+    with open(path, 'w+') as f: 
+        header = 'bias,' + 'episode,' + 'agent_id,' + 'reward\n'
+        f.write(header)
+
+    for bias in hyperparams['bias']:
+        for i in range(3):
+            env = make_apple_env(args, 9, 5, bias)
+            print(f"bias: {bias}")
+            
+            agent1, agent2 = get_agents(env, env, log_dir, sacd_config, dqn_config, None)
+            run_train(env, agent1, agent2, num_episodes)
+
+            # Log agent 1
+            with open(path, 'a') as f: 
+                for episode, val in enumerate(agent1.train_returns):
+                    data = f"{bias},{episode+1},{1},{val}\n"
+                    f.write(data)
+
+            # Log agent 2
+            with open(path, 'a') as f: 
+                for episode, val in enumerate(agent2.train_returns):
+                    data = f"{bias},{episode+1},{2},{val}\n"
+                    f.write(data)
+
 def run(args):
     with open(args.sacd_config) as f:
         sacd_config = yaml.load(f, Loader=yaml.SafeLoader)
@@ -318,7 +348,7 @@ def run(args):
         run_mixed_comparison(env, args.num_episodes, sacd_config, dqn_config, log_dir)
     else:
     """
-    run_aggression_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_aggression_dqn_real.csv')
+    run_bias_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_bias.csv')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -333,6 +363,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--apple_respawn_delay', type=int, default=15)
     parser.add_argument('--grid_size_x', type=int, default=12)
+    parser.add_argument('--center_bias', type=int, default=4)
     parser.add_argument('--grid_size_y', type=int, default=12)
     parser.add_argument('--apple_count', type=int, default=9)
     parser.add_argument('--agent_count', type=int, default=2)
