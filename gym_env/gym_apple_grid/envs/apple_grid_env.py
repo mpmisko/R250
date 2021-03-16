@@ -71,8 +71,8 @@ class AppleGridEnv(gym.Env):
         return x, y
 
     def _sample_random_location_biased(self):
-        x = np.random.randint(low=self.dimensions[0] // self.center_bias , high=self.dimensions[0] // self.center_bias * (1 - self.center_bias))
-        y = np.random.randint(low=self.dimensions[1] // self.center_bias , high=self.dimensions[1] // self.center_bias * (1 - self.center_bias))
+        x = np.random.randint(low=self.dimensions[0] // self.center_bias , high=self.dimensions[0] * (self.center_bias - 1) // (self.center_bias))
+        y = np.random.randint(low=self.dimensions[1] // self.center_bias , high=self.dimensions[1] * (self.center_bias - 1) // (self.center_bias))
         return x, y
 
     def _init_map(self):
