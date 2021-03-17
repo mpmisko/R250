@@ -7,4 +7,4 @@ eps_start: 0.95
 eps_end: 0.05
 eps_decay: 1000
 n_actions: 5
-memory_size: 10000
+memory_size: 200

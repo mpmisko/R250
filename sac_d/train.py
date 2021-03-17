@@ -303,7 +303,7 @@ def run_bias_comparison(num_episodes, sacd_config, dqn_config, log_dir,  path='.
         f.write(header)
 
     for bias in hyperparams['bias']:
-        for i in range(3):
+        for i in range(2):
             env = make_apple_env(args, 9, 5, bias)
             print(f"bias: {bias}")
             
@@ -348,7 +348,7 @@ def run(args):
         run_mixed_comparison(env, args.num_episodes, sacd_config, dqn_config, log_dir)
     else:
     """
-    run_bias_comparison(args.num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_bias.csv')
+    run_bias_comparison(num_episodes, sacd_config, dqn_config, log_dir,  path='./logs_bias_proper.csv')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
